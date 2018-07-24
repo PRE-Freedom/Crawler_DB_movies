@@ -1,6 +1,8 @@
 import configparser
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
+import time
 
 config = configparser.ConfigParser()
 config.read(filenames='../config.ini', encoding='utf8')
@@ -15,9 +17,17 @@ def first_crawler(url: str):
     print(url)
     # 访问目标网页地址
     dirver.get(url)
+    time.sleep(100)
+    a_more = dirver.find_elements(By.CLASS_NAME, 'more')[0]
+    flag = True
+    while flag:
+        if a_more.text == '加载更多':
+            a_more.click()
+        else:
+            flag = False
     # 解析目标网页的 Html 源码
     bs_obj = BeautifulSoup(dirver.page_source, parser)
-    divs = bs_obj.find(name='div', class_='list-wp')
+    a_more = bs_obj.find(name='a', class_='more', href='javascript:;')
 
 
 if __name__ == '__main__':
