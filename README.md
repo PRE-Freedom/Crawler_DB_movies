@@ -1,2 +1,9 @@
-# Crawer_DB_movies
-crawl the description and pictures of movies from douban
+# Crawer for DB'movies
+Crawl the description and pictures of movies from douban
+### General
+system version : macos
+
+python EV : python3
+
+
+
