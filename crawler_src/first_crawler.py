@@ -3,7 +3,6 @@ from urllib import request
 from urllib.parse import quote
 import json
 
-
 # config = configparser.ConfigParser()
 # config.read(filenames='../config.ini', encoding='utf8')
 # # set browser
@@ -11,6 +10,11 @@ import json
 # dirver = webdriver.PhantomJS(executable_path=browserPath)
 # # assign parser
 # parser = "html5lib"
+# get db para
+# host = config['mysql']['host']
+# user = config['mysql']['user']
+# passwd = config['mysql']['passwd']
+# database = config['mysql']['database']
 
 
 def first_crawler(url: str):
