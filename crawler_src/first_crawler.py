@@ -1,14 +1,20 @@
 import configparser
+import json
 from urllib import request
 from urllib.parse import quote
-import json
+
 import pymysql
+from pymysql.err import IntegrityError
 
 config = configparser.ConfigParser()
 config.read(filenames='../config.ini', encoding='utf8')
 
 
 def db_manager():
+    """
+    manager the database
+    :return: db object
+    """
     host = config['mysql']['host']
     user = config['mysql']['user']
     passwd = config['mysql']['passwd']
@@ -17,15 +23,26 @@ def db_manager():
     return db
 
 
-def first_crawler(url: str):
-    print(url)
+def first_crawler(url: str, movie_type: str):
+    """
+    crawl the fundamental info of movies
+    :param url: incomplete url, must add the index
+    :param movie_type:
+    :return:
+    """
     index = 0
+    # get the ability to operate the database
     db = db_manager()
     cursor = db.cursor()
     while True:
-        url += str(index)
-        response = request.urlopen(url)
+        real_url = url + str(index)
+
+        print(real_url)
+
+        # request the url with internet and get response
+        response = request.urlopen(real_url)
         context = response.read().decode('utf-8')
+        # parser the response to json(dict)
         json_obj = json.loads(context)
         subjects = json_obj['subjects']
         if len(subjects):
@@ -34,19 +51,37 @@ def first_crawler(url: str):
                 rate = subject['rate']
                 movie_url = subject['url']
                 cover_path = subject['cover']
-                sql = "insert into movies(title,rate,movie_url,cover_path) values ('" + title + "','" + rate + "','" + movie_url + "','" + cover_path + "')"
-                cursor.execute(sql)
-                db.commit()
-                index += 20
+                movie_id = subject['id']
+                # record the movie's info into database
+                sql = "insert into movies(movie_id,movie_type,title,rate,movie_url,cover_path) values ('" + \
+                      movie_id + "','" + movie_type + "','" + title + "','" + rate + "','" + movie_url + "','" + \
+                      cover_path + "')"
+                try:
+                    cursor.execute(sql)
+                    db.commit()
+                except IntegrityError:
+                    # deal the repetitive movie
+                    sql = "select movie_type from movies where movie_id='" + movie_id + "'"
+                    cursor.execute(sql)
+                    movie_type_old = cursor.fetchone()[0]
+                    if movie_type not in movie_type_old:
+                        update_mv_type = movie_type_old + '&' + movie_type
+                        sql = "update movies set movie_type='" + update_mv_type + "' where movie_id='" + movie_id + "'"
+                        cursor.execute(sql)
+                        db.commit()
+                    else:
+                        pass
+            index += 20
         else:
             break
+    cursor.close()
+    db.close()
 
 
 if __name__ == '__main__':
-    first_crawler(
-        'https://movie.douban.com/j/search_subjects?type=movie&tag=%E5%8A%A8%E4%BD%9C&sort=recommend&page_limit=20&page_start=')
-    # movies_type = str(config['douban']['type'])
-    # for t in movies_type.split('&'):
-    #     type_url = 'https://movie.douban.com/j/search_subjects?type=movie&tag=' + quote(
-    #         t) + '&sort=recommend&page_limit=20&page_start=0'
-    #     first_crawler(url=type_url)
+    movies_type = str(config['douban']['type'])
+    for t in movies_type.split('&'):
+        print(t)
+        type_url = 'https://movie.douban.com/j/search_subjects?type=movie&tag=' + quote(
+            t) + '&sort=recommend&page_limit=20&page_start='
+        first_crawler(url=type_url, movie_type=t)
