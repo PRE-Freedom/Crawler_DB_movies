@@ -10,17 +10,26 @@ config = configparser.ConfigParser()
 config.read(filenames='../config.ini', encoding='utf8')
 
 
-def db_manager():
-    """
-    manager the database
-    :return: db object
-    """
-    host = config['mysql']['host']
-    user = config['mysql']['user']
-    passwd = config['mysql']['passwd']
-    database = config['mysql']['database']
-    db = pymysql.connect(host=host, user=user, passwd=passwd, db=database, charset='utf8')
-    return db
+class Database:
+    def __init__(self):
+        self.host = config['mysql']['host']
+        self.user = config['mysql']['user']
+        self.passwd = config['mysql']['passwd']
+        self.database = config['mysql']['database']
+
+    def db_manager(self):
+        """
+        manager the database
+        :return: db object
+        """
+        db = pymysql.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.database, charset='utf8')
+        cursor = db.cursor()
+        return db, cursor
+
+    @staticmethod
+    def close_db(db, cursor):
+        cursor.close()
+        db.close()
 
 
 def first_crawler(url: str, movie_type: str):
@@ -32,8 +41,8 @@ def first_crawler(url: str, movie_type: str):
     """
     index = 0
     # get the ability to operate the database
-    db = db_manager()
-    cursor = db.cursor()
+    db_obj = Database()
+    db, cursor = db_obj.db_manager()
     while True:
         real_url = url + str(index)
 
@@ -74,8 +83,7 @@ def first_crawler(url: str, movie_type: str):
             index += 20
         else:
             break
-    cursor.close()
-    db.close()
+    Database.close_db(db, cursor)
 
 
 if __name__ == '__main__':
