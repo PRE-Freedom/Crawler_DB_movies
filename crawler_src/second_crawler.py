@@ -35,7 +35,10 @@ def second_crawler_for_abstract(movie_url: str):
     with request.urlopen(movie_url) as resp:
         bs4_obj = BeautifulSoup(resp.read().decode('utf-8'), 'html5lib')
     span = bs4_obj.find(name='span', property='v:summary')
-    context = str(span.get_text()).replace('\n', '').replace(' ', '').replace("'", "`")
+    try:
+        context = str(span.get_text()).replace('\n', '').replace(' ', '').replace("'", "`")
+    except AttributeError:
+        context = 'this movies has no abstract'
     return context
 
 
