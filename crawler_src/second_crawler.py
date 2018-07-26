@@ -7,11 +7,16 @@ from bs4 import BeautifulSoup
 def second_crawler_for_cover(movie_type: str, title: str, cover_path: str, storge_path):
     """
     download the cover of the movie
-    :param cover_path:
-    :return:
+
+    :param movie_type:
+    :param title: name of movie
+    :param cover_path: picture of movie
+    :param storge_path:
+    :return: None
     """
     types = movie_type.split('&')
     # could be improved
+    # deal the multiple type but should new single folder
     for m_type in types:
         folder_name = storge_path + m_type + "/"
         if not os.path.exists(folder_name):
@@ -24,14 +29,13 @@ def second_crawler_for_cover(movie_type: str, title: str, cover_path: str, storg
 def second_crawler_for_abstract(movie_url: str):
     """
     obtain the abstract of movie
-    :param movie_type:
     :param movie_url:
     :return:
     """
     with request.urlopen(movie_url) as resp:
         bs4_obj = BeautifulSoup(resp.read().decode('utf-8'), 'html5lib')
     span = bs4_obj.find(name='span', property='v:summary')
-    context = str(span.get_text()).replace('\n', '').replace(' ', '')
+    context = str(span.get_text()).replace('\n', '').replace(' ', '').replace("'", "`")
     return context
 
 
@@ -50,6 +54,7 @@ if __name__ == '__main__':
         second_crawler_for_cover(movie_type, title, cover_path, '../movies_cover/')
         # gain the abstract
         abstract = second_crawler_for_abstract(movie_url)
+        # store the abstract into database
         if abstract is not None and len(abstract) != 0:
             sql = "update movies set flag=1,abstract='" + abstract + "' where id=" + str(movie_id)
             cursor.execute(sql)
