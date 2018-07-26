@@ -49,10 +49,11 @@ def first_crawler(url: str, movie_type: str):
         print(real_url)
 
         # request the url with internet and get response
-        response = request.urlopen(real_url)
-        context = response.read().decode('utf-8')
-        # parser the response to json(dict)
-        json_obj = json.loads(context)
+
+        with request.urlopen(real_url) as response:
+            context = response.read().decode('utf-8')
+            # parser the response to json(dict)
+            json_obj = json.loads(context)
         subjects = json_obj['subjects']
         if len(subjects):
             for subject in subjects:
